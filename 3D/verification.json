@@ -1,0 +1,149 @@
+{
+  "dimensions_mm": [
+    80.0,
+    39.0,
+    28.0
+  ],
+  "user_measurements": {
+    "length": 80.0,
+    "width": 39.0,
+    "height": 28.0,
+    "wall": 2.0,
+    "pcb_x": 3.5,
+    "pcb_y": 4.0,
+    "pcb_length": 64.0,
+    "pcb_width": 31.0,
+    "pcb_thickness_assumed": 1.6,
+    "pcb_z": 21.8,
+    "screen_thickness": 3.0,
+    "assembly_thickness": 12.0,
+    "display_left": 5.0,
+    "display_top": 3.0,
+    "display_length": 54.0,
+    "display_width": 21.0,
+    "window_margin": 0.2,
+    "back_thickness": 3.0,
+    "battery_x": 10.0,
+    "battery_y": 11.0,
+    "battery_z": 3.5,
+    "battery_length": 53.0,
+    "battery_width": 22.0,
+    "battery_height": 10.0,
+    "rail_clearance": 0.2,
+    "switch_plate_length": 20.0,
+    "switch_plate_width": 5.0,
+    "switch_inner_depth": 10.0,
+    "switch_lever_width": 4.0,
+    "switch_travel_assumed": 5.0
+  },
+  "positions": {
+    "active_xy": [
+      8.5,
+      11.0
+    ],
+    "buttons_xy": [
+      [
+        50.3,
+        7.5
+      ],
+      [
+        60.77,
+        7.5
+      ]
+    ],
+    "usb_x": 35.69,
+    "magnets_xy": [
+      [
+        9,
+        8
+      ],
+      [
+        70,
+        8
+      ],
+      [
+        9,
+        31
+      ],
+      [
+        52,
+        31
+      ]
+    ]
+  },
+  "assumptions": [
+    "PCB thickness1.6; individual component/control heights not measured",
+    "Frame taken within64x31 envelope; verify any overhang",
+    "Component envelope excludes1.3mm edge band for snap hooks; qualify on actual PCB"
+  ],
+  "clip_count": 4,
+  "switch_geometry_preserved": true,
+  "body": {
+    "valid": true,
+    "solids": 1
+  },
+  "back": {
+    "valid": true,
+    "solids": 1
+  },
+  "overlaps_mm3": {
+    "battery": 0.0,
+    "pcb": 0.0,
+    "screen": 0.0,
+    "switch": 0.0,
+    "components": 0.0,
+    "back": 0.0
+  },
+  "clip_release_mm": 1.5,
+  "slide_samples": [
+    [
+      0,
+      0
+    ],
+    [
+      0.2,
+      0
+    ],
+    [
+      1,
+      0
+    ],
+    [
+      4,
+      0
+    ],
+    [
+      8,
+      0
+    ],
+    [
+      16,
+      0
+    ],
+    [
+      32,
+      0
+    ],
+    [
+      48,
+      0
+    ],
+    [
+      64,
+      0
+    ],
+    [
+      80,
+      0
+    ]
+  ],
+  "continuous_slide_mm3": 0.0,
+  "Coque_monobloc.stl": {
+    "solid": true,
+    "facets": 1500
+  },
+  "Dos_coulissant.stl": {
+    "solid": true,
+    "facets": 2456
+  }
+}

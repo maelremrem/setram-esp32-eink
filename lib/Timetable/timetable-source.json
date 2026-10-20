@@ -1,0 +1,31 @@
+{
+  "departure_count": 201197,
+  "embedded_bytes": 375570,
+  "encoding": "interned LEB128 delta seconds v1",
+  "exception_count": 44,
+  "excluded_pickups": 2459,
+  "feed_info": {
+    "feed_contact_email": "support@mecatran.com",
+    "feed_contact_url": "https://www.mecatran.com/",
+    "feed_end_date": "20261111",
+    "feed_lang": "fr",
+    "feed_publisher_name": "Mecatran",
+    "feed_publisher_url": "https://www.mecatran.com/",
+    "feed_start_date": "20260930",
+    "feed_version": "1791412204664"
+  },
+  "generated_at": "2026-10-08T21:24:42.381276+00:00",
+  "group_count": 6655,
+  "max_departure_seconds": 92737,
+  "pattern_count": 2021,
+  "service_count": 17,
+  "source_sha256": "ec0a7249f5986f60677d315e2245dd8e54790fa12fe7b2ff31e4ae628650d566",
+  "source_stop_times": 203671,
+  "source_url": "https://eur.mecatran.com/utw/ws/gtfsfeed/static/lemans?apiKey=73334a124f3a1654141d6979113106450f291d15&type=gtfs_setram_urbsco",
+  "source_zip_bytes": 2519571,
+  "timezone": "Europe/Paris",
+  "unique_time_list_count": 4552,
+  "valid_end": "20261111",
+  "valid_start": "20260930",
+  "validity_source": "feed_info/calendar"
+}

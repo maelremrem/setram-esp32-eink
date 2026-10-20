@@ -1,0 +1,158 @@
+"""Boitier CrowPanel 2.13 -- executer dans FreeCAD via MCP ou comme macro.
+Source PCB: https://www.elecrow.com/download/product/DIE01021S/Eagle_SCH&PCB.zip
+PCB Eagle: x=0..63.2, y=-1..30.2; commandes selon elements K1..K5/J2.
+Les hauteurs de composants, la vitre et le switch sont des hypotheses de montage.
+Modifier P ci-dessous, puis relancer pour regenerer dans un NOUVEAU document.
+"""
+import FreeCAD as App
+import Part, MeshPart, math, os, json
+from FreeCAD import Vector as V
+
+OUT = '/home/maelremrem/Documents/dev/busNotifier-ESP32/3D'
+P = dict(length=82.0, width=48.0, rear_height=24.0, face_thickness=2.0,
+         wall=2.0, floor=3.0, pcb_length=63.2, pcb_width=31.2,
+         pcb_x=9.4, pcb_y=9.4, pcb_z=20.6, pcb_thickness=1.6,
+         battery_length=53.0, battery_width=22.0, battery_height=10.0,
+         battery_x=14.5, battery_y=11.0, battery_z=3.5,
+         magnet_diameter=10.0, magnet_height=2.0, magnet_clearance=0.3,
+         magnet_pocket_depth=2.2, magnet_skin=0.8,
+         switch_plate_length=20.0, switch_plate_width=5.0,
+         switch_inner_depth=10.0, switch_lever_width=4.0,
+         switch_lever_projection=5.0, switch_travel_assumed=5.0,
+         fit_clearance=0.4)
+L,W,H=P['length'],P['width'],P['rear_height']
+bx,by,bz=P['pcb_x'],P['pcb_y'],P['pcb_z']
+screws=[(15.5,4),(60,4),(22,44),(60,44)]
+magnets=[(8,8),(74,8),(8,40),(74,40)]
+D=App.newDocument('CrowPanel_Enclosure')
+D.Label='CrowPanel 2.13 - boitier batterie et aimants'
+params=D.addObject('Spreadsheet::Sheet','Dimensions')
+params.Label='Cotes mm (reference; modifier P dans la macro pour regenerer)'
+for i,(k,v) in enumerate(P.items(),1):
+    params.set('A'+str(i),k); params.set('B'+str(i),str(v))
+    params.setAlias('B'+str(i),k)
+params.setColumnWidth('A',230)
+
+def box(x,y,z,dx,dy,dz): return Part.makeBox(dx,dy,dz,V(x,y,z))
+def cyl(x,y,z,r,h): return Part.makeCylinder(r,h,V(x,y,z))
+def rounded(x,y,z,dx,dy,dz,r):
+    parts=[box(x+r,y,z,dx-2*r,dy,dz),box(x,y+r,z,dx,dy-2*r,dz)]
+    parts += [cyl(cx,cy,z,r,dz) for cx in (x+r,x+dx-r) for cy in (y+r,y+dy-r)]
+    return parts[0].multiFuse(parts[1:]).removeSplitter()
+def feature(name,label,shape,group,color,visible=True):
+    o=D.addObject('PartDesign::Feature',name); o.Label=label; o.Shape=shape
+    group.addObject(o); o.ViewObject.ShapeColor=color; o.ViewObject.Visibility=visible
+    return o
+rear_group=D.addObject('App::DocumentObjectGroup','RearConstruction')
+rear_group.Label='01 - Coque arriere / historique de construction'
+face_group=D.addObject('App::DocumentObjectGroup','FaceConstruction')
+face_group.Label='02 - Cadre avant / historique de construction'
+refs=D.addObject('App::DocumentObjectGroup','References')
+refs.Label='03 - Encombrements (non exportes)'
+blue=(0.19,0.36,0.48)
+rear=rounded(0,0,0,L,W,H,4).cut(rounded(2,2,3,L-4,W-4,H,2)).removeSplitter()
+feature('RearShell','Coque - parois 2 mm, fond 3 mm',rear,rear_group,blue,False)
+# Supports longitudinaux: PCB sans trous, maintien par le cadre avant.
+shelves=[box(bx,2,bz-1.6,63.2,8.2,1.6),box(bx,39.8,bz-1.6,63.2,6.2,1.6)]
+posts=[cyl(x,y,3,3.4,13) for x,y in screws]
+rear=rear.multiFuse(shelves+posts).removeSplitter()
+feature('BoardSupports','Appuis PCB et 4 colonnettes M2.5',rear,rear_group,blue,False)
+# Batterie: jeu lateral de 0.5 mm, rebords bas, aucun serrage de la poche LiPo.
+tray=rounded(13.2,9.7,3,55.6,24.6,3,1.0).cut(box(14,10.5,2.9,54,23,4))
+tray=tray.cut(box(66,18,3,4,8,4))
+rear=rear.fuse(tray).removeSplitter()
+# Guides switch lateral droit: platine verticale 20 x 5, corps 10 mm dedans.
+switch_guides=[box(69.5,12.8,6.2,10.5,0.8,7.0),box(69.5,34.4,6.2,10.5,0.8,7.0),
+               box(78.7,13.6,5.8,1.3,20.8,0.8),box(78.7,13.6,12.6,1.3,20.8,0.8)]
+rear=rear.multiFuse(switch_guides).removeSplitter()
+feature('BatteryAndSwitchSupports','Berceau batterie et guides interrupteur',rear,rear_group,blue,False)
+# Acces lateral MENU, EXIT et molette. Y Eagle translate de +1 vers PCB local.
+cutters=[box(-1,by+25.69+1-4,18,12,8,7),
+         box(-1,by+3.41+1-4,18,12,8,7),
+         box(-1,by+14.6+1-8.5,16.5,13,17,8.5),
+         box(bx+32.19-6.5,-1,17.8,13,13,7.2),
+         box(bx+16.35-7,-1,17.8,14,12,7.2),
+         box(bx+35.54-6.5,39,17.8,13,10,7.2),
+         box(79.4,13.7,6.7,1.2,20.6,5.6),
+         box(79.3,19.5,7.5,4,9,4.4)]
+# BOOT et RESET accessibles au dos avec une tige non conductrice.
+for x in (bx+46.8,bx+57.27): cutters.append(cyl(x,by+26.5+1,-1,2.0,H+2))
+for x,y in magnets: cutters.append(cyl(x,y,P['magnet_skin'],5.15,2.2))
+for x,y in screws:
+    cutters.append(cyl(x,y,-1,1.4,H+2))
+    cutters.append(cyl(x,y,16,3.2,H-15))  # degagement pour la colonnette du cadre
+    cutters.append(cyl(x,y,-0.1,2.7,1.9))  # tete encastree au dos, profondeur 1.8 mm
+for c in cutters: rear=rear.cut(c)
+rear=rear.removeSplitter()
+rear_obj=feature('RearFinal','COQUE ARRIERE - piece a imprimer',rear,rear_group,blue)
+rear_obj.addProperty('App::PropertyString','Fasteners','Assembly').Fasteners='4 vis M2.5 x 20 mm depuis le dos; tete <= 5.4 x 1.8 mm; pilotes borgnes 2.1 mm dans le cadre'
+rear_obj.addProperty('App::PropertyString','Magnets','Assembly').Magnets='4 aimants 10 x 2 mm, poches 10.3 x 2.2 mm depuis interieur; colle puis montage'
+# Cadre: chevauchement de 0.8 mm sur le bord de vitre, a valider sur materiel.
+face=rounded(0,0,H,L,W,2,4)
+face=face.cut(rounded(bx+0.8,by+0.8,H-1,61.6,29.6,4,0.8))
+# Bord gauche retire autour des commandes, elles restent accessibles.
+for y,h in [(by+25.69+1-4,8),(by+3.41+1-4,8),(by+14.6+1-8.5,17)]:
+    face=face.cut(box(-1,y,H-0.1,bx+1.0,h,2.3))
+face=face.multiFuse([cyl(x,y,16.2,3.0,H-16.2) for x,y in screws])
+for x,y in screws:
+    face=face.cut(cyl(x,y,16.1,1.05,8.4))  # borgne, 1.5 mm sous la face visible
+face=face.removeSplitter()
+face_obj=feature('FaceFinal','CADRE AVANT - piece a imprimer',face,face_group,(0.82,0.85,0.86))
+# Encombrements transparents, vue de montage optionnelle.
+battery=box(14.5,11,3.5,53,22,10)
+pcb=box(bx,by,bz,63.2,31.2,1.6)
+glass=box(bx,by,22.2,63.2,31.2,1.8)
+switch=box(70,14,7,10,20,5)
+for name,label,sh,col in [('Battery','Batterie 53 x 22 x 10',battery,(0.8,0.55,0.17)),
+                           ('PCB','PCB officiel 63.2 x 31.2 - epaisseur supposee',pcb,(0.12,0.5,0.2)),
+                           ('Display','Vitre - hauteur supposee',glass,(0.9,0.9,0.9)),
+                           ('SlideSwitch','Switch - interpretation a confirmer',switch,(0.2,0.2,0.2))]:
+    o=feature(name,label,sh,refs,col,False); o.ViewObject.Transparency=65
+for i,(x,y) in enumerate(magnets,1):
+    o=feature('Magnet'+str(i),'Aimant '+str(i),cyl(x,y,0.9,5,2),refs,(0.65,0.66,0.7),False)
+D.recompute()
+checks={}
+for label,sh in [('rear',rear),('face',face)]:
+    checks[label]={'valid':sh.isValid(),'solids':len(sh.Solids),'volume_mm3':sh.Volume}
+    assert sh.isValid() and len(sh.Solids)==1, (label,checks[label])
+for label,sh in [('battery',battery),('pcb',pcb),('display',glass),('switch',switch)]:
+    checks[label+'_rear_collision_mm3']=rear.common(sh).Volume
+    checks[label+'_face_collision_mm3']=face.common(sh).Volume
+    assert checks[label+'_rear_collision_mm3']<0.0001,label
+    assert checks[label+'_face_collision_mm3']<0.0001,label
+checks['rear_face_collision_mm3']=rear.common(face).Volume
+assert checks['rear_face_collision_mm3']<0.0001
+checks['screws']={'entry':'rear','axes_mm':screws,'nominal_length_mm':20,
+ 'head_recess_depth_mm':1.8,'front_blind_cap_mm':1.5}
+for i,(x,y) in enumerate(screws,1):
+    cap=cyl(x,y,24.5,1.05,1.5)
+    assert abs(face.common(cap).Volume-cap.Volume)<0.0001, 'front blind cap'
+    clearance=cyl(x,y,1.8,1.25,14.4)
+    assert rear.common(clearance).Volume<0.0001, 'rear screw passage'
+    shaft=cyl(x,y,1.8,1.25,20)
+    for envelope in [battery,pcb,glass,switch]:
+        assert shaft.common(envelope).Volume<0.0001, 'screw hits component'
+checks['dimensions_mm']=[L,W,H+2]
+checks['assumptions']=['PCB thickness 1.6 mm','Display thickness 1.8 mm',
+ 'Rear components <= 7.1 mm above battery', 'Glass edge overlap 0.8 mm needs physical check',
+ 'Switch plate 20x5 mm, body depth 10 mm, lever width 4 mm, assumed travel 5 mm',
+ '4 magnets chosen by default; holding force not evaluated', 'Wiring and components not modelled individually']
+Gui.activeDocument().activeView().viewAxonometric()
+Gui.activeDocument().activeView().fitAll()
+D.recompute()
+D.saveAs(os.path.join(OUT,'CrowPanel_Boitier.FCStd'))
+Part.export([rear_obj,face_obj],os.path.join(OUT,'CrowPanel_Boitier.step'))
+for obj,filename in [(rear_obj,'Coque_arriere.stl'),(face_obj,'Cadre_avant.stl')]:
+    # Traduction du cadre au plan Z=0 pour son impression a plat.
+    shape=obj.Shape.copy()
+    if obj==face_obj:
+        # Face visible sur plateau; colonnettes vers le haut.
+        shape.rotate(V(0,0,0),V(1,0,0),180)
+        shape.translate(V(0,W,H+2))
+    mesh=MeshPart.meshFromShape(Shape=shape,LinearDeflection=0.08,AngularDeflection=0.20,Relative=False)
+    mesh.write(os.path.join(OUT,filename))
+    checks[filename]={'facets':mesh.CountFacets,'solid':mesh.isSolid()}
+    assert mesh.isSolid(), filename
+with open(os.path.join(OUT,'verification.json'),'w') as f: json.dump(checks,f,indent=2)
+print(json.dumps(checks,indent=2))
+print('Saved:',D.FileName)

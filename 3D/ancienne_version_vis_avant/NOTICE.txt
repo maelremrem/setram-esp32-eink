@@ -1,0 +1,58 @@
+BOITIER CROWPANEL 2.13 - PREMIERE VERSION MECANIQUE
+
+Fichiers :
+CrowPanel_Boitier.FCStd : assemblage FreeCAD, historique geometrique et encombrements.
+CrowPanel_Boitier.step : deux pieces en position assemblee.
+Coque_arriere.stl et Cadre_avant.stl : pieces separees, chacune au plan Z=0.
+build_enclosure.FCMacro : source regenerable, parametres dans le dictionnaire P.
+verification.json : controles geometriques executes dans FreeCAD.
+
+Dimensions hors tout : 82 x 48 x 26 mm (sans levier de switch).
+Batterie : 53 x 22 x 10 mm, jeu lateral 0.5 mm, dessous a Z=3.5 mm.
+PCB : 63.2 x 31.2 mm, appuis a Z=20.6 mm, montage SANS trous dans le PCB.
+4 aimants : 10 x 2 mm; logements 10.3 x 2.2 mm accessibles depuis l'interieur,
+avec une peau de plastique de 0.8 mm vers l'exterieur. Coller et laisser durcir
+avant d'installer batterie/electronique. Force magnetique non verifiee.
+Fermeture : 4 vis M2.5 x 10 mm, autotaraudeuses pour plastique, pilotes 2.1 mm.
+Ne pas serrer le cadre contre la vitre avec force. Ne pas percer la batterie.
+
+Acces : MENU, EXIT et molette sur le cote gauche vu depuis le PCB;
+USB-C et UART en bas, GPIO en haut; BOOT et RESET au dos par des trous
+pour une tige fine NON conductrice. Les trous arriere se basent sur Eagle.
+Interrupteur ajoute sur le cote droit, hors volume de la batterie.
+
+INTERPRETATION DU SWITCH A CONFIRMER :
+platine 20 mm de long x 5 mm de large; corps profondeur 10 mm vers l'interieur;
+levier 4 mm de large, saillie 5 mm. Course supposee 5 mm : ouverture 9 x 4.4 mm.
+La platine est logee dans une feuillure avec guides; prevoir un point de colle
+ou fixation adaptee apres essai, car les trous de vis/pattes ne sont pas connus.
+
+SOURCE OFFICIELLE :
+https://www.elecrow.com/wiki/CrowPanel_ESP32_E-Paper_HMI_2.13-inch_Display.html
+https://www.elecrow.com/download/product/DIE01021S/Eagle_SCH&PCB.zip
+Fichier CrowPanel ESP32 Display-2.13(E) Inch(1).brd : contour x=0..63.2,
+y=-1..30.2. Positions boutons/connecteurs extraites du fichier, pas estimees
+sur la photo. Photos constructeur consultees pour le sens des interfaces.
+
+LIMITES AVANT IMPRESSION DEFINITIVE :
+PCB 1.6 mm et vitre 1.8 mm sont des hypotheses, pas des cotes certifiees.
+Verifier ces epaisseurs et la hauteur des composants arriere (jeu de 7.1 mm
+entre batterie et dessous PCB). Aucun modele individuel des composants/fils.
+Le cadre chevauche le bord de vitre de 0.8 mm : verifier qu'il ne masque pas
+la zone active et n'appuie pas sur une zone fragile. Ajouter une mousse fine
+adaptee sans forcer la vitre ni comprimer la batterie; ajuster Z si necessaire.
+La longueur de course et les details du switch doivent etre confirmes.
+L'orientation physique face/dos devra correspondre au PCB fourni.
+Pas d'essai physique d'emboitement, de force magnetique ou de charge thermique.
+
+IMPRESSION :
+PETG conseille, couche 0.2 mm, 3 perimetres au moins. Fond de coque sur plateau;
+cadre a plat. Examiner les petits surplombs des appuis PCB/colonnette droite
+et le pontage des ouvertures dans le trancheur; activer des supports localises
+si necessaire, pas dans les trous pilotes. Faire un premier essai du cadre et
+du logement switch avant de monter une batterie. Ajuster les jeux a l'imprimante.
+
+VERIFICATION EXECUTEE :
+Chaque piece est un solide BRep valide; STL fermes. Pas d'intersection entre
+les deux pieces ni avec les volumes de reference batterie, PCB, vitre, switch.
+Ces controles valident les enveloppes supposees, pas l'ajustement au materiel reel.

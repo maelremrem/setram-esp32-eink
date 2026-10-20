@@ -1,0 +1,44 @@
+# PlatformIO / compile artifacts
+.pio/
+.cache/
+compile_commands.json
+*.elf
+*.bin
+*.map
+*.o
+*.a
+*.d
+
+# Local configuration and credentials (keep public examples versioned)
+/include/config.h
+/include/bus_config.h
+.env
+.env.*
+!.env.example
+secrets.json
+secrets.*.json
+*.key
+
+# Python / test caches and virtual environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# Editors, OS files and transient CAD backups
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+*.FCBak
+*.FCStd1
+
+# Keep source GTFS headers/provenance, docs/screens and delivered 3D models.
+# .gitignore does not remove already-tracked secrets: audit before publishing.

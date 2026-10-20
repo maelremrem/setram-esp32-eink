@@ -1,0 +1,238 @@
+"""CrowPanel: coque monobloc + dos coulissant depuis le cote droit, 1 vis.
+Source XY: Eagle Elecrow DIE01021S. Hauteurs electroniques/switch supposees.
+Lancer dans FreeCAD. Corps imprime facade sur plateau, dos face externe sur plateau.
+"""
+import FreeCAD as App
+import Part, MeshPart, json, os
+from FreeCAD import Vector as V
+OUT='/home/maelremrem/Documents/dev/busNotifier-ESP32/3D'
+P=dict(length=82.,width=48.,height=26.,wall=2.,back_thickness=3.,
+       pcb_x=9.4,pcb_y=9.4,pcb_z=20.6,pcb_length=63.2,pcb_width=31.2,
+       battery_length=53.,battery_width=22.,battery_height=10.,
+       battery_x=14.5,battery_y=16.,battery_z=3.5,
+       rail_clearance_side=0.2,rail_clearance_z=0.2,
+       magnet_diameter=10.,magnet_thickness=2.,
+       switch_plate_length=20.,switch_plate_width=5.,switch_inner_depth=10.,
+       switch_lever_width=4.,switch_travel_assumed=5.,
+       clip_width=4.,clip_thickness=1.1,clip_hook_overlap=0.7,clip_pcb_gap=0.25)
+L,W,H=P['length'],P['width'],P['height'];bx,by,bz=P['pcb_x'],P['pcb_y'],P['pcb_z']
+magnets=[(8,8),(74,8),(8,40),(74,40)]
+screw=(77.,39.)
+# Corrections PHYSIQUES selon annotations utilisateur, symetrie Y autour du PCB.
+def pcb_y(y_eagle):return 2*by+P['pcb_width']-(by+y_eagle+1)
+button_y=pcb_y(26.5)  # ancien 36.9 -> 13.1 mm
+usb_x=bx+32.19
+D=App.newDocument('CrowPanel_Sliding');D.Label='CrowPanel - coque monobloc / dos coulissant / 1 vis'
+S=D.addObject('Spreadsheet::Sheet','Dimensions')
+S.Label='Parametres reference - regenerer via P dans la macro'
+for i,(k,v) in enumerate(P.items(),1):S.set('A'+str(i),k);S.set('B'+str(i),str(v));S.setAlias('B'+str(i),k)
+S.setColumnWidth('A',220)
+bodygroup=D.addObject('App::DocumentObjectGroup','BodyConstruction');bodygroup.Label='01 - Coque monobloc'
+backgroup=D.addObject('App::DocumentObjectGroup','BackConstruction');backgroup.Label='02 - Dos coulissant'
+refs=D.addObject('App::DocumentObjectGroup','References');refs.Label='03 - Encombrements fixes dans la coque'
+def box(x,y,z,dx,dy,dz):return Part.makeBox(dx,dy,dz,V(x,y,z))
+def cyl(x,y,z,r,h):return Part.makeCylinder(r,h,V(x,y,z))
+def rounded(x,y,z,dx,dy,dz,r):
+    ss=[box(x+r,y,z,dx-2*r,dy,dz),box(x,y+r,z,dx,dy-2*r,dz)]
+    ss += [cyl(a,b,z,r,dz) for a in (x+r,x+dx-r) for b in (y+r,y+dy-r)]
+    return ss[0].multiFuse(ss[1:]).removeSplitter()
+def obj(name,label,sh,group,color,vis=True):
+    o=D.addObject('PartDesign::Feature',name);o.Label=label;o.Shape=sh;group.addObject(o)
+    o.ViewObject.ShapeColor=color;o.ViewObject.Visibility=vis;return o
+blue=(0.19,0.36,0.48)
+# Face ET parois forment directement un unique solide. Ouverture totale au dos.
+body=rounded(0,0,0,L,W,H,4).cut(rounded(2,2,-1,L-4,W-4,25,2))
+body=body.cut(rounded(bx+0.8,by+0.8,23.9,61.6,29.6,3.1,0.8))
+obj('MonocoqueBlank','Facade et parois fusionnees - dos ouvert',body,bodygroup,blue,False)
+# Coulisse suivant X: rainures continues dans les deux longues parois.
+# Bord de la plaque y=2.2..45.8; languettes y=1..2.4 et45.6..47.
+for y in (0.8,45.6):body=body.cut(box(2,y,1.0,81,1.6,1.4))
+# Entree sur cote droit (X=82), uniquement au niveau du dos.
+body=body.cut(box(77.8,0.8,-0.1,5.2,46.4,3.4))
+obj('SlideChannels','Deux glissieres et entree laterale droite',body,bodygroup,blue,False)
+# Guides PCB hors de son enveloppe. Montage par le dos, aucun appui transversal
+# qui fermerait le chemin d'introduction de la carte. Maintien par 4 clips ci-dessous.
+pcb_guides=[box(8.0,33,20.2,1.4,6,4),box(8.0,12,20.2,1.4,5,4),
+            box(72.6,34,20.2,1.4,5,4),box(72.6,12,20.2,1.4,4,4)]
+body=body.multiFuse(pcb_guides)
+# Reperes lateraux batterie, sans berceau solidaire du dos: elle ne coulisse pas.
+# Maintien par sangle textile aux ancrages et mousse 0.5 mm sur dos ferme.
+battery_guides=[box(2,17,3.6,6.8,1,3.4),box(2,35,3.6,6.8,1,3.4),
+                box(73.2,17,3.6,6.8,1,3.4),box(73.2,35,3.6,6.8,1,3.4)]
+body=body.multiFuse(battery_guides)
+for x in (4,74):
+    for y in (17,35):body=body.cut(box(x,y-0.1,4.3,3,1.2,1.6))
+switch_guides=[box(73.2,12.8,6.2,6.8,0.8,7),box(73.2,34.4,6.2,6.8,0.8,7),
+               box(78.7,13.6,5.8,1.3,20.8,0.8),box(78.7,13.6,12.6,1.3,20.8,0.8)]
+body=body.multiFuse(switch_guides)
+# Unique bossage de verrouillage. Emplacement hors batterie, switch et aimants.
+# Surplomb arriere a Z=3.3, vis verticale depuis le dos dans trou borgne.
+x,y=screw
+body=body.fuse(box(75,36,3.3,5,7,6.7))
+body=body.cut(cyl(x,y,3.2,1.05,5.7))
+obj('InternalGuides','Guides internes / ancrages sangle / bossage unique',body,bodygroup,blue,False)
+controls=[box(-1,pcb_y(25.69)-4,18,12,8,8.1),
+          box(-1,pcb_y(3.41)-4,18,12,8,8.1),
+          box(-1,pcb_y(14.6)-8.5,16.5,13,17,9.6),
+          box(usb_x-6.5,38,17.8,13,13,6.2),  # unique USB, bord oppose
+          # UART supprime, GPIO deja ferme.
+          box(79.4,13.7,6.7,1.2,20.6,5.6),box(79.3,19.5,7.5,4,9,4.4)]
+for c in controls:body=body.cut(c)
+# BOOT/RESET: nouveaux acces sur le bord oppose suivant annotations rouges.
+for xx in (bx+46.8,bx+57.27):body=body.cut(cyl(xx,button_y,-1,2,25))
+body=body.removeSplitter()
+body_without_clips=body.copy()
+# Quatre languettes elastiques ancrees aux parois, levre sous le PCB.
+# Le haut correspond a +Y. La vue arriere doit retourner X, pas Y.
+clip_shapes=[];clip_specs=[]
+for cx,upper in [(12.5,False),(57,False),(12.5,True),(67,True)]:
+    # Section YZ: rampe d'insertion puis crochet, libre sous PCB de 0.25 mm.
+    yz=[(8.05,9),(9.15,9),(9.15,18.9),(10.1,19.6),(10.1,20.35),(8.05,20.35)]
+    if upper:yz=[(50-yy,zz) for yy,zz in yz]
+    wire=Part.makePolygon([V(cx,yy,zz) for yy,zz in yz]+[V(cx,yz[0][0],yz[0][1])])
+    beam=Part.Face(wire).extrude(V(4,0,0))
+    foot=box(cx,41.9 if upper else 2,9,4,4.1 if upper else 6.1,1.6)
+    clip=beam.fuse(foot).removeSplitter()
+    clip_shapes.append(clip);clip_specs.append({'x_mm':cx,'edge':'upper' if upper else 'lower'})
+body=body.multiFuse(clip_shapes).removeSplitter()
+obj('SnapClips','Quatre clips PCB integres avec rampes de montage',body,bodygroup,blue,False)
+body_obj=obj('BodyFinal','COQUE MONOBLOC - piece a imprimer',body,bodygroup,blue)
+body_obj.addProperty('App::PropertyString','Closure','Assembly').Closure='Dos coulissant depuis X positif (cote droit); une vis M2.5 x 6 mm depuis le dos'
+# Dos plan; les guides et la batterie restent dans la coque lors de son retrait.
+back=rounded(2.2,2.2,0,79.8,43.6,3,1.8)
+back=back.multiFuse([box(2.2,1,1.2,79.8,1.4,1),box(2.2,45.6,1.2,79.8,1.4,1)])
+obj('BackBlank','Plaque et deux languettes de glissement',back,backgroup,(0.82,0.85,0.86),False)
+# Aimant haut droit decale pour eviter vis ET trous BOOT/RESET.
+magnets=[(8,8),(74,8),(8,40),(48,40)]
+for xx,yy in magnets:back=back.cut(cyl(xx,yy,0.8,5.15,2.3))
+for xx in (bx+46.8,bx+57.27):back=back.cut(cyl(xx,button_y,-1,2,5))
+back=back.cut(cyl(x,y,-1,1.4,5)).cut(cyl(x,y,-0.1,2.7,1.5))
+# Petite encoche de prise au bord droit, hors du bossage.
+back=back.cut(box(80,21,0,3,6,1))
+back=back.removeSplitter()
+back_obj=obj('BackFinal','DOS COULISSANT - piece a imprimer',back,backgroup,(0.82,0.85,0.86))
+back_obj.addProperty('App::PropertyString','Fastener','Assembly').Fastener='1 vis M2.5 x 6 autotaraudeuse plastique, tete basse <= 5.4 x 1.4 mm; essai couple necessaire'
+back_obj.addProperty('App::PropertyString','SlideFit','Assembly').SlideFit='Jeu 0.2 mm par face de rail; course extraction vers X positif'
+battery=box(14.5,16,3.5,53,22,10)
+pcb=box(bx,by,bz,63.2,31.2,1.6)
+glass=box(bx,by,22.2,63.2,31.2,1.8)
+switch=box(70,14,7,10,20,5)
+for name,label,sh,color in [('Battery','Batterie fixe 53 x22 x10',battery,(0.8,0.55,0.17)),
+    ('PCB','PCB 63.2 x31.2 - hauteur supposee',pcb,(0.1,0.5,0.2)),
+    ('Display','Vitre - epaisseur supposee',glass,(0.9,0.9,0.9)),
+    ('SlideSwitch','Switch - interpretation a confirmer',switch,(0.2,0.2,0.2))]:
+    o=obj(name,label,sh,refs,color,False);o.ViewObject.Transparency=65
+magshapes=[]
+for i,(xx,yy) in enumerate(magnets,1):
+    sh=cyl(xx,yy,0.9,5,2);magshapes.append(sh)
+    obj('Magnet'+str(i),'Aimant '+str(i),sh,refs,(0.6,0.6,0.65),False)
+D.recompute()
+checks={}
+for label,sh in [('body',body),('back',back)]:
+    checks[label]={'valid':sh.isValid(),'solids':len(sh.Solids),'volume_mm3':sh.Volume}
+    assert sh.isValid() and len(sh.Solids)==1,(label,checks[label])
+checks['body_back_overlap_mm3']=body.common(back).Volume
+assert checks['body_back_overlap_mm3']<1e-5
+for label,sh in [('battery',battery),('pcb',pcb),('glass',glass),('switch',switch)]:
+    for piece,part in [('body',body),('back',back)]:
+        vol=part.common(sh).Volume;checks[label+'_'+piece+'_overlap_mm3']=vol
+        assert vol<1e-5,(label,piece,vol)
+# Controle de la vraie trajectoire du couvercle ET des aimants qu'il transporte.
+# Les composants et la batterie restent fixes pendant le glissement.
+slide_results=[]
+for dx in [0,0.2,0.5,1,2,4,8,16,24,32,40,48,56,64,72,80,82]:
+    moving=back.copy();moving.translate(V(dx,0,0))
+    collisions=[moving.common(s).Volume for s in [body,battery,pcb,glass,switch]]
+    for sh in magshapes:
+        m=sh.copy();m.translate(V(dx,0,0))
+        collisions.extend(m.common(s).Volume for s in [body,battery,pcb,glass,switch])
+    mx=max(collisions);slide_results.append({'dx_mm':dx,'max_overlap_mm3':mx})
+    assert mx<1e-5,('slide collision',dx,mx)
+checks['sliding_path_samples']=slide_results
+# Boite englobante balayee de tout le dos: verification continue conservative.
+sweep=rounded(2.2,2.2,0,79.8,43.6,3,1.8).multiFuse([box(4,2.2,0,160,43.6,3),box(2.2,1,1.2,161.8,1.4,1),box(2.2,45.6,1.2,161.8,1.4,1)])
+insertion=box(bx,by,-5,63.2,31.2,29)
+checks['pcb_insertion_without_snap_hooks_mm3']=body_without_clips.common(insertion).Volume
+assert checks['pcb_insertion_without_snap_hooks_mm3']<1e-5, 'Obstacle other than intended hooks'
+checks['clips']={'count':len(clip_shapes),'beam_thickness_mm':1.1,'width_mm':4,
+ 'hook_overlap_mm':0.7,'pcb_axial_gap_mm':0.25,'release_clearance_test_mm':1.0,
+ 'positions':clip_specs,'note':'Geometric snap-clearance checks, not mechanical FEA or printed strength qualification'}
+retention=[]
+for clip,spec in zip(clip_shapes,clip_specs):
+    released=clip.copy();released.translate(V(0,1 if spec['edge']=='upper' else -1,0))
+    assert released.common(insertion).Volume<1e-5,'Insufficient outward release clearance'
+    rearward_pcb=pcb.copy();rearward_pcb.translate(V(0,0,-0.5))
+    held=clip.common(rearward_pcb).Volume
+    assert held>0,'Hook does not retain PCB'
+    retention.append(held)
+checks['clips_retain_pcb_after_0p5mm_rearward_motion_mm3']=retention
+checks['continuous_slide_clearance_mm3']=sweep.common(body).Volume
+assert checks['continuous_slide_clearance_mm3']<1e-5
+shaft=cyl(x,y,1.4,1.25,6)
+for s in [battery,pcb,glass,switch]+magshapes:assert shaft.common(s).Volume<1e-5
+checks['requested_openings']={'button_y_old_mm':36.9,'button_y_new_mm':button_y,
+ 'buttons_x_mm':[bx+46.8,bx+57.27],'usb_count':1,'usb_wall_y_mm':48,
+ 'old_usb_uart_wall_closed_y_mm':0,'uart_removed':True,'gpio_removed':True,
+ 'battery_y_shift_mm':5}
+for xx in [bx+46.8,bx+57.27]:
+    tunnel=cyl(xx,button_y,0,2,bz)
+    assert tunnel.common(battery).Volume<1e-5,'Battery blocks button access'
+    for m in magshapes:assert tunnel.common(m).Volume<1e-5,'Magnet blocks button access'
+    assert not back.isInside(V(xx,button_y,1.5),1e-6,True)
+    assert back.isInside(V(xx,36.9,1.5),1e-6,True), 'Old button hole not closed'
+assert not body.isInside(V(usb_x,47,20),1e-6,True),'USB on wrong edge'
+for xx in [usb_x,bx+16.35]:
+    assert body.isInside(V(xx,1,20),1e-6,True),'Old side still open'
+assert body.isInside(V(bx+16.35,47,20),1e-6,True),'Extra UART opening'
+checks['closure']={'type':'monocoque + sliding back','slide_direction':'+X (right side)',
+ 'fastener_count':1,'fastener':'M2.5 x 6 low head','rail_face_clearance_mm':0.2}
+checks['dimensions_mm']=[L,W,H]
+checks['assumptions']=['PCB 1.6 mm / glass 1.8 mm','Battery fixed in body by textile strap, foam 0.5 mm on lid',
+ 'PCB retained by 4 PETG snap clips; PCB thickness/component-edge clearance and physical clip strength need test',
+ 'Switch plate 20x5, body depth10, lever width4, assumed travel5',
+ 'Optical aperture/physical fit/rail friction/head dimensions and retention require hardware test']
+Gui.activeDocument().activeView().viewAxonometric();Gui.activeDocument().activeView().fitAll()
+D.recompute();D.saveAs(OUT+'/CrowPanel_Boitier.FCStd')
+Part.export([body_obj,back_obj],OUT+'/CrowPanel_Boitier.step')
+for o,f in [(body_obj,'Coque_monobloc.stl'),(back_obj,'Dos_coulissant.stl')]:
+    sh=o.Shape.copy()
+    if o==body_obj:sh.rotate(V(0,0,0),V(1,0,0),180);sh.translate(V(0,W,H))
+    mesh=MeshPart.meshFromShape(Shape=sh,LinearDeflection=0.08,AngularDeflection=0.2,Relative=False)
+    mesh.write(OUT+'/'+f);assert mesh.isSolid()
+    checks[f]={'facets':mesh.CountFacets,'solid':mesh.isSolid()}
+with open(OUT+'/verification.json','w') as f:json.dump(checks,f,indent=2)
+print(json.dumps(checks,indent=2))
+print('Saved',D.FileName)
+# Vues reproductibles: instantanees, sans animation de camera entre captures.
+Gui.activeDocument().activeView().stopAnimating()
+Gui.activeDocument().activeView().setAnimationEnabled(False)
+Gui.activeDocument().activeView().viewAxonometric()
+Gui.activeDocument().activeView().fitAll()
+def rear_view():
+    Gui.activeDocument().activeView().setCameraOrientation(App.Rotation(V(0,1,0),180).Q)
+    Gui.activeDocument().activeView().fitAll()
+Gui.activeDocument().activeView().saveImage(OUT+'/Vue_assemblee.png',1400,1000,'White')
+v=Gui.activeDocument().activeView()
+v.setCameraOrientation(App.Rotation(V(0,0,1),180).multiply(App.Rotation(v.getCameraOrientation())).Q)
+v.fitAll();v.saveImage(OUT+'/Vue_USB_corrige.png',1400,1000,'White')
+# Vue de face dans le MEME sens que les annotations (X et Y retournes).
+Gui.activeDocument().activeView().setCameraOrientation(App.Rotation(V(0,0,1),180).Q)
+Gui.activeDocument().activeView().fitAll()
+Gui.activeDocument().activeView().saveImage(OUT+'/Vue_annotations_corrigees.png',1400,1000,'White')
+rear_view()
+Gui.activeDocument().activeView().saveImage(OUT+'/Vue_arriere.png',1400,1000,'White')
+D.BackFinal.ViewObject.Visibility=False
+rear_view()
+Gui.activeDocument().activeView().saveImage(OUT+'/Vue_clips.png',1400,1000,'White')
+D.BackFinal.ViewObject.Visibility=True;D.BackFinal.Placement.Base=V(50,0,0)
+D.Battery.ViewObject.Visibility=True;D.SlideSwitch.ViewObject.Visibility=True
+for i in range(1,5):
+    o=D.getObject('Magnet'+str(i));o.ViewObject.Visibility=True;o.Placement.Base=V(50,0,0)
+rear_view()
+Gui.activeDocument().activeView().saveImage(OUT+'/Vue_dos_coulissant.png',1400,1000,'White')
+Gui.activeDocument().activeView().viewAxonometric();Gui.activeDocument().activeView().fitAll()
+Gui.activeDocument().activeView().saveImage(OUT+'/Vue_eclatee.png',1400,1000,'White')
+D.BackFinal.Placement.Base=V(0,0,0)
+for o in refs.Group:o.ViewObject.Visibility=False;o.Placement.Base=V(0,0,0)
+D.recompute();Gui.activeDocument().activeView().viewAxonometric();Gui.activeDocument().activeView().fitAll()
+

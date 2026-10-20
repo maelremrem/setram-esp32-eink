@@ -1,0 +1,82 @@
+CROWPANEL - REVISION SELON COTES REELLES UTILISATEUR
+
+VERSION ACTIVE
+Source: build_measured_enclosure.FCMacro (executee avec MCP FreeCAD).
+CrowPanel_Boitier.FCStd, CrowPanel_Boitier.step.
+A imprimer: Coque_monobloc.stl et Dos_coulissant.stl, a echelle100%.
+Anciennes versions archivees: ne pas imprimer leurs fichiers.
+Apercus: Vue_facade_mesuree.png, Vue_assemblee.png, Vue_clips.png, Vue_eclatee.png.
+
+MESURES FOURNIES
+PCB64x31mm. Zone active54x21mm, retrait5mm gauche et3mm haut en vue de face.
+Ecran3mm. Ensemble ecran+PCB+plus haut composant12mm.
+Batterie53x22x10mm. Quatre aimants ronds diametre10x2mm.
+Switch: dimensions/jeux du logement precedent conserves, uniquement translate.
+
+NOUVELLE GEOMETRIE
+Exterieur80x39x28mm hors levier: ancienne largeur48mm reduite a39mm.
+La profondeur augmente de26 a28mm pour loger ensemble12mm et batterie10mm,
+avec dos3mm, facade1.6mm, jeu sous batterie0.5mm et separation0.9mm.
+Fenetre54.4x21.4mm: marge0.2mm autour de la zone active; pas d'arrondis
+masquant les coins de l'affichage. Appui ecran sur la peripherie uniquement.
+Guides PCB rapproches: ecartement64mm; introduire sans forcer et ebavurer.
+PCB a X3.5..67.5,Y4..35,Z21.8..23.4. Ecran a Z23.4..26.4.
+Composants a Z14.4..21.8. Batterie a X10..63,Y11..33,Z3.5..13.5.
+Quatre clips largeur4mm, epaisseur1.1mm, crochet sous PCB avec jeu axial0.25mm.
+Clips ecartables vers les parois; liberation geometrique controlee a1.5mm.
+PETG conseille; flexibilite/tenue a valider physiquement sans batterie.
+
+FERMETURE ET SWITCH
+Facade/cotes monobloc. Dos glisse depuis la droite (+X). Une vis arriere.
+Rails jeu0.2mm par face. Retirer completement la vis avant extraction.
+Vis M2.5x6 autotaraudeuse plastique, tete basse <=diametre5.4xhauteur1.4.
+Trou pilote2.1mm; passage2.8mm; lamage5.4x1.4mm; axe X75,Y34.
+Switch identique au logement valide: platine20x5, profondeur10, largeur
+levier4, ouverture externe9x4.4mm. Course5mm supposee. Verifier soudure/fils.
+
+ACCES ET ORIENTATION
+Repere: face a l'endroit, X gauche->droite, Y bas->haut, Z dos->face.
+BOOT/RESET: axes X50.3 et60.77,Y7.5, trous diametre3.4mm au dos.
+Acces par tige NON conductrice. Aucun chemin ne traverse la batterie/aimants.
+MENU/EXIT et molette accessibles sur le cote gauche; ouvertures bornees
+en hauteur pour ne pas entailler la facade. USB seule ouverture connecteur,
+X35.69 sur bordY39, ouverture11x5.5mm. UART/GPIO restent fermes.
+XY commandes extrait du fichier Eagle officiel, meme orientation corrigee
+que les annotations precedentes, sans mise a l'echelle du dessin.
+Les hauteurs individuelles des boutons et USB restent estimees:
+confirmer alignement et acces au cable avant impression definitive.
+
+BATTERIE ET AIMANTS
+Batterie FIXE dans coque, maintenue sans compression par sangle textile
+non conductrice; ne pas la coller au dos coulissant. Ne pas loger fils ou
+sangles dans les rails. Pas de vissage ni pression sur la cellule LiPo.
+Poches aimants diametre10.3mm, profondeur2.2mm, peau externe0.8mm.
+Centres(9,8),(70,8),(9,31),(52,31). Coller depuis interieur; isoler et
+laisser secher avant montage. Force d'aimantation non qualifiee.
+
+HYPOTHESES A CONTROLER
+Epaisseur PCB1.6mm supposee. Cadre/support de l'ecran suppose dans
+l'enveloppe64x31mm: signaler s'il deborde reellement du PCB.
+Enveloppe composants centrale conserve une bande1.3mm aux bords pour
+les clips; verifier ces quatre zones sur la carte reelle, et le passage
+nappe/cables. Les photos ne donnent pas les hauteurs individuelles fiables.
+Ces reserves ne changent pas les cotes mesurees12mm et3mm.
+
+VERIFICATIONS EFFECTUEES
+Une coque et un dos BRep valides, chacun un solide. Aucun chevauchement
+avec enveloppes PCB/ecran/composants/batterie/switch. Dos et aimants testes
+sur la course; balayage continu conservatif du dos sans collision coque.
+Insertion PCB/ecran libre hors crochets intentionnels. Crochets retiennent
+le PCB apres recul0.5mm. Degagement geometrique apres ecartement1.5mm.
+Axe de vis degage. FCStd relu; STEP valide a deux solides; deux STL relus
+fermes. verification.json contient controles de generation.
+Les controles numeriques ne certifient pas l'ajustement apres impression.
+
+IMPRESSION ET MONTAGE
+STL coque facade contre plateau, dos face externe contre plateau.
+PETG, couches0.2mm, trois perimetres minimum. Examiner dans trancheur
+les surplombs/rails/clips et ajouter supports localises si necessaire.
+Essayer d'abord coque avec carte seule, sans batterie et sans forcer.
+Verifier fenetre, boutons et branchement USB, puis tester dos/switch.
+Enfin installer batterie/sangles/fils isoles et aimants. Une nouvelle
+validation physique est indispensable avant de considerer ce modele final.

@@ -1,0 +1,167 @@
+{
+  "body": {
+    "valid": true,
+    "solids": 1,
+    "volume_mm3": 14952.095767019619
+  },
+  "back": {
+    "valid": true,
+    "solids": 1,
+    "volume_mm3": 9759.456556182593
+  },
+  "body_back_overlap_mm3": 0.0,
+  "battery_body_overlap_mm3": 0.0,
+  "battery_back_overlap_mm3": 0.0,
+  "pcb_body_overlap_mm3": 0.0,
+  "pcb_back_overlap_mm3": 0.0,
+  "glass_body_overlap_mm3": 0.0,
+  "glass_back_overlap_mm3": 0.0,
+  "switch_body_overlap_mm3": 0.0,
+  "switch_back_overlap_mm3": 0.0,
+  "sliding_path_samples": [
+    {
+      "dx_mm": 0,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 0.2,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 0.5,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 1,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 2,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 4,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 8,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 16,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 24,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 32,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 40,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 48,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 56,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 64,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 72,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 80,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 82,
+      "max_overlap_mm3": 0.0
+    }
+  ],
+  "pcb_insertion_without_snap_hooks_mm3": 0.0,
+  "clips": {
+    "count": 4,
+    "beam_thickness_mm": 1.1,
+    "width_mm": 4,
+    "hook_overlap_mm": 0.7,
+    "pcb_axial_gap_mm": 0.25,
+    "release_clearance_test_mm": 1.0,
+    "positions": [
+      {
+        "x_mm": 12.5,
+        "edge": "lower"
+      },
+      {
+        "x_mm": 57,
+        "edge": "lower"
+      },
+      {
+        "x_mm": 12.5,
+        "edge": "upper"
+      },
+      {
+        "x_mm": 67,
+        "edge": "upper"
+      }
+    ],
+    "note": "Geometric snap-clearance checks, not mechanical FEA or printed strength qualification"
+  },
+  "clips_retain_pcb_after_0p5mm_rearward_motion_mm3": [
+    0.6999999999999997,
+    0.7000000000000006,
+    0.7000000000000034,
+    0.700000000000006
+  ],
+  "continuous_slide_clearance_mm3": 0.0,
+  "requested_openings": {
+    "button_y_old_mm": 36.9,
+    "button_y_new_mm": 13.100000000000001,
+    "buttons_x_mm": [
+      56.199999999999996,
+      66.67
+    ],
+    "usb_count": 1,
+    "usb_wall_y_mm": 48,
+    "old_usb_uart_wall_closed_y_mm": 0,
+    "uart_removed": true,
+    "gpio_removed": true,
+    "battery_y_shift_mm": 5
+  },
+  "closure": {
+    "type": "monocoque + sliding back",
+    "slide_direction": "+X (right side)",
+    "fastener_count": 1,
+    "fastener": "M2.5 x 6 low head",
+    "rail_face_clearance_mm": 0.2
+  },
+  "dimensions_mm": [
+    82.0,
+    48.0,
+    26.0
+  ],
+  "assumptions": [
+    "PCB 1.6 mm / glass 1.8 mm",
+    "Battery fixed in body by textile strap, foam 0.5 mm on lid",
+    "PCB retained by 4 PETG snap clips; PCB thickness/component-edge clearance and physical clip strength need test",
+    "Switch plate 20x5, body depth10, lever width4, assumed travel5",
+    "Optical aperture/physical fit/rail friction/head dimensions and retention require hardware test"
+  ],
+  "Coque_monobloc.stl": {
+    "facets": 1580,
+    "solid": true
+  },
+  "Dos_coulissant.stl": {
+    "facets": 2440,
+    "solid": true
+  }
+}

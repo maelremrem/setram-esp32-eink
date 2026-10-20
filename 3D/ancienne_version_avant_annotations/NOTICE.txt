@@ -1,0 +1,90 @@
+CROWPANEL 2.13 - COQUE MONOBLOC ET DOS COULISSANT / UNE VIS
+
+VERSION ACTIVE
+CrowPanel_Boitier.FCStd : coque facade+cotes d'un seul tenant et dos coulissant.
+CrowPanel_Boitier.step : deux solides assembles.
+Coque_monobloc.stl et Dos_coulissant.stl : les DEUX fichiers a imprimer.
+build_sliding_enclosure.FCMacro : source regenerable, parametres P.
+verification.json : controles FreeCAD executes.
+Vue_assemblee.png, Vue_arriere.png, Vue_dos_coulissant.png : apercus.
+Les anciennes versions sont archivees, ne pas imprimer leurs STL.
+
+DIMENSIONS ET FERMETURE
+Hors tout 82 x 48 x 26 mm, sans levier du switch.
+Façade et quatre parois integrees dans la coque, pas de cadre avant separable.
+Le dos s'introduit depuis le COTE DROIT (X positif) et coulisse vers la gauche.
+Deux languettes courent dans les longues parois. Jeu de 0.2 mm par face de rail;
+il est a ajuster a l'imprimante apres un essai de glissement.
+Une seule vis M2.5 x 6 mm autotaraudeuse plastique, depuis le dos, bloque la
+translation. Passage 2.8 mm, lamage 5.4 x 1.4 mm; choisir une tete basse
+<= 5.4 x 1.4 mm. Trou pilote borgne 2.1 mm dans le bossage de la coque.
+Retirer totalement cette vis avant de sortir le dos vers la droite.
+Prevoir environ 82 mm libres du cote droit pour le retrait complet.
+Aucun trou de fermeture dans la facade. Petite encoche de prise sur le dos.
+
+ELECTRONIQUE ET BATTERIE
+Installer la carte par le dos AVANT le switch et la batterie.
+PCB sans trous de fixation : guidage lateral et QUATRE clips integres,
+deux sur chaque long bord. Aucun collage necessaire pour le maintien du PCB.
+Clips PETG : largeur4 mm, epaisseur1.1 mm, crochet de0.7 mm sous le PCB,
+jeu axial0.25 mm. Rampes pour insertion depuis le dos.
+Ecarter doucement les languettes vers les parois pour inserer/retirer la carte;
+ne jamais pousser ou tirer sur la vitre. L'effort/flexibilite restent a tester
+sur impression, sans batterie. Verifier absence de composants au bord des clips.
+La vitre porte sur la levre avant avec une interface souple adaptee, sans force.
+La batterie 53 x 22 x 10 reste FIXE DANS LA COQUE quand le dos coulisse :
+la retenir avec deux sangles textiles non conductrices dans les ancrages,
+sans la comprimer. Les sangles/fils ne doivent pas descendre sous Z=3.3 mm
+ni entrer dans les glissieres. Une mousse 0.5 mm sur la face interne du dos
+peut soutenir la batterie sans la charger. Ne pas coller la batterie au dos :
+sinon le retrait lateral tirerait sur les fils et rencontrerait le switch.
+Valider fixation et isolation; arreter si la batterie est gonflee ou abimee.
+
+AIMANTS
+4 aimants ronds 10 x 2 mm sur le dos; poches 10.3 mm, peau externe 0.8 mm.
+Coller depuis l'interieur, colle completement seche avant l'assemblage.
+Centres XY : (8,8), (74,8), (8,40), (48,40) mm.
+L'aimant du haut droit est decale pour eviter BOOT/RESET et la vis unique.
+Les aimants coulissent AVEC le dos et restent sous la batterie et le switch.
+Force magnetique, tenue de colle et charge thermique non verifiees physiquement.
+
+ACCES
+MENU, EXIT et molette : cote gauche du PCB. USB-C/UART en bas conserves.
+La paroi du haut est fermee : ouverture GPIO supprimee.
+Les trous BOOT/RESET restent alignes avec les coordonnees du PCB officiel
+(Y=36.9 mm, cote haut +Y). Les anciennes vues FreeCAD Bottom retournaient Y
+et les montraient en bas. Les nouvelles vues arriere retournent X seulement :
+haut et bas physiques sont conserves. La geometrie de ces trous n'est pas deplacee.
+BOOT/RESET : deux trous arriere pour tige NON conductrice.
+Switch lateral droit : platine 20 x 5, profondeur interne 10, levier largeur4;
+course supposee 5 mm, ouverture 9 x 4.4. Fixation complementaire par point de
+colle approprie si besoin: trous/pattes/geometry exacts non fournis.
+
+SOURCE ET HYPOTHESES
+https://www.elecrow.com/download/product/DIE01021S/Eagle_SCH&PCB.zip
+https://www.elecrow.com/wiki/CrowPanel_ESP32_E-Paper_HMI_2.13-inch_Display.html
+Contour Eagle 63.2 x31.2; positions XY boutons/connecteurs extraites du PCB.
+PCB 1.6 mm et vitre1.8 mm : hypotheses a mesurer sur l'appareil reel.
+Dessous PCB Z=20.6; batterie Z=3.5..13.5, jeu dessous PCB7.1 mm.
+Chevauchement de vitre0.8 mm : verifier zone active et absence de pression.
+Les composants/fils ne sont pas modelises individuellement; verifier leur hauteur.
+Le maintien par clips/sangles et le mouvement reel necessitent un essai.
+
+IMPRESSION
+PETG conseille, couche0.2 mm, trois perimetres minimum.
+Coque_monobloc.stl est orientee FACADE SUR PLATEAU, arriere ouvert vers le haut.
+Dos_coulissant.stl : face externe sur plateau.
+Verifier les surplombs du bossage et des guides/rails dans le trancheur,
+activer des supports localises si necessaire. Retirer supports et bavures
+sans agrandir les pilotes ni les glissieres au hasard. Tester a vide avant LiPo.
+
+CONTROLES NUMERIQUES
+Deux solides BRep valides, STL fermes, aucune intersection en position fermee
+avec les enveloppes PCB/vitre/batterie/switch. Glissement du dos et de ses
+quatre aimants teste sur toute la course par echantillons; balayage continu
+conservatif du dos controle contre la coque. Introduction de l'enveloppe
+PCB/vitre par le dos controlee en dehors des contacts intentionnels des crochets.
+Les quatre crochets bloquent un recul du PCB de0.5 mm dans le modele; un retrait
+geometrique des languettes de1 mm libere l'enveloppe d'introduction. Il ne s'agit
+pas d'une simulation de flexion ou d'une validation de resistance du PETG.
+Ces controles ne remplacent pas une validation physique de l'ajustement.

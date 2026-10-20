@@ -1,0 +1,121 @@
+"""Revision sur cotes utilisateur. Executee via MCP FreeCAD.
+Repere: facade vue a l'endroit, X gauche->droite, Y bas->haut, Z dos->face.
+PCB64x31, actif54x21 a5mm gauche/3mm haut, ecran3mm, ensemble12mm.
+Positions XY commandes Eagle conservees sans mise a l'echelle; hauteurs individuelles supposees.
+"""
+import FreeCAD as App, Part, MeshPart, Mesh, os, json
+from FreeCAD import Vector as V
+OUT='/home/maelremrem/Documents/dev/busNotifier-ESP32/3D'
+P=dict(length=80.,width=39.,height=28.,wall=2.,pcb_x=3.5,pcb_y=4.,pcb_length=64.,pcb_width=31.,pcb_thickness_assumed=1.6,pcb_z=21.8,screen_thickness=3.,assembly_thickness=12.,display_left=5.,display_top=3.,display_length=54.,display_width=21.,window_margin=0.2,back_thickness=3.,battery_x=10.,battery_y=11.,battery_z=3.5,battery_length=53.,battery_width=22.,battery_height=10.,rail_clearance=0.2,switch_plate_length=20.,switch_plate_width=5.,switch_inner_depth=10.,switch_lever_width=4.,switch_travel_assumed=5.)
+L,W,H=P['length'],P['width'],P['height'];bx,by,bz=P['pcb_x'],P['pcb_y'],P['pcb_z']
+for d in list(App.listDocuments().values()):
+    if d.FileName==OUT+'/CrowPanel_Boitier.FCStd':App.closeDocument(d.Name)
+D=App.newDocument('CrowPanel_Measured');D.Label='CrowPanel - revision cotes reelles'
+def box(x,y,z,a,b,c):return Part.makeBox(a,b,c,V(x,y,z))
+def cyl(x,y,z,r,h):return Part.makeCylinder(r,h,V(x,y,z))
+def rounded(x,y,z,a,b,c,r):
+    ss=[box(x+r,y,z,a-2*r,b,c),box(x,y+r,z,a,b-2*r,c)]+[cyl(xx,yy,z,r,c) for xx in (x+r,x+a-r) for yy in (y+r,y+b-r)]
+    return ss[0].multiFuse(ss[1:]).removeSplitter()
+def feature(n,label,s,color,visible=True):
+    o=D.addObject('PartDesign::Feature',n);o.Label=label;o.Shape=s;o.ViewObject.ShapeColor=color;o.ViewObject.Visibility=visible;return o
+S=D.addObject('Spreadsheet::Sheet','Dimensions')
+for i,(k,v) in enumerate(P.items(),1):S.set('A'+str(i),k);S.set('B'+str(i),str(v));S.setAlias('B'+str(i),k)
+S.setColumnWidth('A',230)
+# Cavite totale, face epaisseur1.6, appui peripherique de l'ecran.
+body=rounded(0,0,0,L,W,H,3).cut(rounded(2,2,-1,76,35,27.4,1))
+ax=bx+5;ay=by+31-3-21
+window=box(ax-.2,ay-.2,26.3,54.4,21.4,2)
+body=body.cut(window)
+for yy in (.8,36.6):body=body.cut(box(2,yy,1,79,1.6,1.4))
+body=body.cut(box(75.8,.8,-.1,5.2,37.4,3.5))
+# Petits guides attaches a la facade; jeu lateral PCB0.3mm jusqu'aux parois.
+for xx in (3.1,67.5):
+    for yy in (8,28):body=body.fuse(box(xx,yy,21.8,.4,3,4.8))
+# Ancrages de sangle hors PCB et batterie.
+for xx,dd in [(2,1.2),(67.8,10.2)]:
+    for yy in (13,30):
+        anchor=box(xx,yy,4,dd,1.6,3)
+        if dd>2:anchor=anchor.cut(box(xx+1,yy-.1,4.8,dd-2,1.8,1.3))
+        body=body.fuse(anchor)
+# Switch: geometry strictement identique a l'ancienne version, translation(-2,-4.5,0).
+for coords in [(71.2,8.3,6.2,6.8,.8,7),(71.2,29.9,6.2,6.8,.8,7),(76.7,9.1,5.8,1.3,20.8,.8),(76.7,9.1,12.6,1.3,20.8,.8)]:body=body.fuse(box(*coords))
+screw=(75.,34.)
+body=body.fuse(box(73,31,3.5,5,5,6.5)).cut(cyl(75,34,3.4,1.05,5.5))
+def py(ey):return by+31-(ey+1)
+button_y=py(26.5);buttons=[(bx+46.8,button_y),(bx+57.27,button_y)];usb_x=bx+32.19
+# Slots bornes en Z: ils ne decoupent plus la face avant.
+controls=[box(-1,py(25.69)-3,18.5,5.5,6,5.5),box(-1,py(3.41)-3,18.5,5.5,6,5.5),box(-1,py(14.6)-7,17,13,14,7),box(usb_x-5.5,34,16.8,11,6,5.5),box(77.4,9.2,6.7,1.2,20.6,5.6),box(77.3,15,7.5,4,9,4.4)]
+for sh in controls:body=body.cut(sh)
+for xx,yy in buttons:body=body.cut(cyl(xx,yy,-1,1.7,22.7))
+body=body.removeSplitter();without_clips=body.copy();clips=[]
+for xx,upper in [(12,False),(42,False),(12,True),(59,True)]:
+    yz=[(2.2,11),(3.3,11),(3.3,20),(4.6,20.8),(4.6,21.55),(2.2,21.55)]
+    if upper:yz=[(39-y,z) for y,z in yz]
+    wire=Part.makePolygon([V(xx,y,z) for y,z in yz]+[V(xx,*yz[0])])
+    beam=Part.Face(wire).extrude(V(4,0,0));foot=box(xx,35.7 if upper else 1.8,11,4,1.5,1.6)
+    clips.append(beam.fuse(foot))
+body=body.multiFuse(clips).removeSplitter()
+back=rounded(2.2,2.2,0,77.8,34.6,3,1.2).multiFuse([box(2.2,1,1.2,77.8,1.4,1),box(2.2,36.6,1.2,77.8,1.4,1)])
+magpos=[(9,8),(70,8),(9,31),(52,31)];magsh=[]
+for xx,yy in magpos:
+    back=back.cut(cyl(xx,yy,.8,5.15,2.3));magsh.append(cyl(xx,yy,.9,5,2))
+for xx,yy in buttons:back=back.cut(cyl(xx,yy,-1,1.7,5))
+back=back.cut(cyl(75,34,-1,1.4,5)).cut(cyl(75,34,-.1,2.7,1.5)).cut(box(78,16,0,3,6,1)).removeSplitter()
+bo=feature('BodyFinal','COQUE - cotes reelles',body,(.19,.36,.48));ba=feature('BackFinal','DOS COULISSANT - 1 vis',back,(.82,.85,.86))
+battery=box(10,11,3.5,53,22,10);pcb=box(bx,by,bz,64,31,1.6);screen=box(bx,by,23.4,64,31,3);switch=box(68,9.5,7,10,20,5)
+# Enveloppe composants conservative centrale; retrait1.3mm des bords reserve aux clips.
+components=box(bx+1.3,by+1.3,14.4,61.4,28.4,7.4)
+refs=[]
+for name,label,sh,col in [('Battery','Batterie 53x22x10',battery,(.8,.55,.17)),('PCB','PCB mesure 64x31',pcb,(.1,.5,.2)),('Display','Ecran epaisseur3',screen,(.85,.85,.85)),('Components','Composants hauteur enveloppe supposee',components,(.4,.4,.4)),('SlideSwitch','Switch dimensions preservees',switch,(.2,.2,.2)),('ActiveArea','Zone active 54x21 - retraits5/3',box(ax,ay,26.4,54,21,.01),(.95,.95,.95))]:refs.append(feature(name,label,sh,col,False))
+for i,sh in enumerate(magsh,1):refs.append(feature('Magnet'+str(i),'Aimant'+str(i),sh,(.5,.5,.5),False))
+checks={'dimensions_mm':[L,W,H],'user_measurements':P,'positions':{'active_xy':[ax,ay],'buttons_xy':buttons,'usb_x':usb_x,'magnets_xy':magpos},'assumptions':['PCB thickness1.6; individual component/control heights not measured','Frame taken within64x31 envelope; verify any overhang','Component envelope excludes1.3mm edge band for snap hooks; qualify on actual PCB'],'clip_count':4,'switch_geometry_preserved':True}
+for name,sh in [('body',body),('back',back)]:
+    checks[name]={'valid':sh.isValid(),'solids':len(sh.Solids)};assert sh.isValid() and len(sh.Solids)==1,(name,checks[name])
+checks['overlaps_mm3']={}
+for name,sh in [('battery',battery),('pcb',pcb),('screen',screen),('switch',switch),('components',components),('back',back)]:
+    v=body.common(sh).Volume;checks['overlaps_mm3'][name]=v;assert v<1e-5,(name,v)
+for sh in [pcb,screen,components,switch]:assert battery.common(sh).Volume<1e-5
+insertion=box(bx,by,-5,64,31,31.4)
+assert without_clips.common(insertion).Volume<1e-5,'PCB guides obstruct insertion'
+for clip in clips:
+    released=clip.copy();released.translate(V(0,1.5 if clip.BoundBox.Center.y>19.5 else -1.5,0));assert released.common(insertion).Volume<1e-5
+for sh in [battery,pcb,screen,components,switch]:assert back.common(sh).Volume<1e-5
+for sh in [battery,pcb,screen,components,switch]+magsh:assert cyl(75,34,1.4,1.25,6).common(sh).Volume<1e-5
+checks['clip_release_mm']=1.5
+for clip in clips:
+    moved=pcb.copy();moved.translate(V(0,0,-.5));assert clip.common(moved).Volume>0
+for xx,yy in buttons:
+    tunnel=cyl(xx,yy,0,1.7,bz)
+    for sh in [battery,switch]+magsh:assert tunnel.common(sh).Volume<1e-5,'Button access obstruction'
+assert not body.isInside(V(usb_x,38,20),1e-6,True)
+assert body.isInside(V(usb_x,1,20),1e-6,True)
+checks['slide_samples']=[]
+for dx in [0,.2,1,4,8,16,32,48,64,80]:
+    mx=0
+    for sh in [back]+magsh:
+        moved=sh.copy();moved.translate(V(dx,0,0))
+        mx=max(mx,*[moved.common(f).Volume for f in [body,battery,pcb,screen,components,switch]])
+    assert mx<1e-5,('slide',dx,mx);checks['slide_samples'].append([dx,mx])
+# Controle continu du balayage conservatif, aimants inclus dans epaisseur du dos.
+sweep=rounded(2.2,2.2,0,77.8,34.6,3,1.2).multiFuse([box(3.4,2.2,0,160,34.6,3),box(2.2,1,1.2,160,1.4,1),box(2.2,36.6,1.2,160,1.4,1)])
+checks['continuous_slide_mm3']=sweep.common(body).Volume;assert checks['continuous_slide_mm3']<1e-5
+D.recompute();D.saveAs(OUT+'/CrowPanel_Boitier.FCStd');Part.export([bo,ba],OUT+'/CrowPanel_Boitier.step')
+for o,f in [(bo,'Coque_monobloc.stl'),(ba,'Dos_coulissant.stl')]:
+    sh=o.Shape.copy()
+    if o==bo:sh.rotate(V(0,0,0),V(1,0,0),180);sh.translate(V(0,W,H))
+    mesh=MeshPart.meshFromShape(Shape=sh,LinearDeflection=.08,AngularDeflection=.2,Relative=False);assert mesh.isSolid();mesh.write(OUT+'/'+f)
+    checks[f]={'solid':Mesh.Mesh(OUT+'/'+f).isSolid(),'facets':mesh.CountFacets}
+step=Part.Shape();step.read(OUT+'/CrowPanel_Boitier.step');assert step.isValid() and len(step.Solids)==2
+with open(OUT+'/verification.json','w') as f:json.dump(checks,f,indent=2)
+v=Gui.activeDocument().activeView();v.stopAnimating();v.setAnimationEnabled(False);v.viewAxonometric();v.fitAll();v.saveImage(OUT+'/Vue_assemblee.png',1400,1000,'White')
+v.viewTop();v.fitAll();v.saveImage(OUT+'/Vue_facade_mesuree.png',1400,1000,'White')
+ba.ViewObject.Visibility=False;v.setCameraOrientation(App.Rotation(V(0,1,0),180).Q);v.fitAll();v.saveImage(OUT+'/Vue_clips.png',1400,1000,'White')
+ba.ViewObject.Visibility=True;ba.Placement.Base=V(45,0,0)
+D.Battery.ViewObject.Visibility=True;D.PCB.ViewObject.Visibility=True;D.SlideSwitch.ViewObject.Visibility=True
+v.viewAxonometric();v.fitAll();v.saveImage(OUT+'/Vue_eclatee.png',1400,1000,'White')
+ba.Placement.Base=V(0,0,0)
+for o in refs:o.ViewObject.Visibility=False
+D.Display.ViewObject.Visibility=True;D.ActiveArea.ViewObject.Visibility=True
+v.viewTop();v.fitAll();v.saveImage(OUT+'/Vue_facade_mesuree.png',1400,1000,'White')
+D.recompute();v.viewAxonometric();v.fitAll();v.saveImage(OUT+'/Vue_assemblee.png',1400,1000,'White');D.save()
+print(json.dumps(checks,indent=2))

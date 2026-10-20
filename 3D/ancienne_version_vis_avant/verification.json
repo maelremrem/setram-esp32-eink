@@ -1,0 +1,43 @@
+{
+  "rear": {
+    "valid": true,
+    "solids": 1,
+    "volume_mm3": 23098.44321544471
+  },
+  "face": {
+    "valid": true,
+    "solids": 1,
+    "volume_mm3": 3532.419716874979
+  },
+  "battery_rear_collision_mm3": 0.0,
+  "battery_face_collision_mm3": 0.0,
+  "pcb_rear_collision_mm3": 0.0,
+  "pcb_face_collision_mm3": 0.0,
+  "display_rear_collision_mm3": 0.0,
+  "display_face_collision_mm3": 0.0,
+  "switch_rear_collision_mm3": 0.0,
+  "switch_face_collision_mm3": 0.0,
+  "rear_face_collision_mm3": 0.0,
+  "dimensions_mm": [
+    82.0,
+    48.0,
+    26.0
+  ],
+  "assumptions": [
+    "PCB thickness 1.6 mm",
+    "Display thickness 1.8 mm",
+    "Rear components <= 7.1 mm above battery",
+    "Glass edge overlap 0.8 mm needs physical check",
+    "Switch plate 20x5 mm, body depth 10 mm, lever width 4 mm, assumed travel 5 mm",
+    "4 magnets chosen by default; holding force not evaluated",
+    "Wiring and components not modelled individually"
+  ],
+  "Coque_arriere.stl": {
+    "facets": 4624,
+    "solid": true
+  },
+  "Cadre_avant.stl": {
+    "facets": 2084,
+    "solid": true
+  }
+}

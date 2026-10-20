@@ -1,0 +1,120 @@
+{
+  "body": {
+    "valid": true,
+    "solids": 1,
+    "volume_mm3": 14271.535767019624
+  },
+  "back": {
+    "valid": true,
+    "solids": 1,
+    "volume_mm3": 9759.45655618259
+  },
+  "body_back_overlap_mm3": 0.0,
+  "battery_body_overlap_mm3": 0.0,
+  "battery_back_overlap_mm3": 0.0,
+  "pcb_body_overlap_mm3": 0.0,
+  "pcb_back_overlap_mm3": 0.0,
+  "glass_body_overlap_mm3": 0.0,
+  "glass_back_overlap_mm3": 0.0,
+  "switch_body_overlap_mm3": 0.0,
+  "switch_back_overlap_mm3": 0.0,
+  "sliding_path_samples": [
+    {
+      "dx_mm": 0,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 0.2,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 0.5,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 1,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 2,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 4,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 8,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 16,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 24,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 32,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 40,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 48,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 56,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 64,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 72,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 80,
+      "max_overlap_mm3": 0.0
+    },
+    {
+      "dx_mm": 82,
+      "max_overlap_mm3": 0.0
+    }
+  ],
+  "pcb_insertion_sweep_overlap_mm3": 0.0,
+  "continuous_slide_clearance_mm3": 0.0,
+  "closure": {
+    "type": "monocoque + sliding back",
+    "slide_direction": "+X (right side)",
+    "fastener_count": 1,
+    "fastener": "M2.5 x 6 low head",
+    "rail_face_clearance_mm": 0.2
+  },
+  "dimensions_mm": [
+    82.0,
+    48.0,
+    26.0
+  ],
+  "assumptions": [
+    "PCB 1.6 mm / glass 1.8 mm",
+    "Battery fixed in body by textile strap, foam 0.5 mm on lid",
+    "PCB held at guides by removable silicone or appropriate edge adhesive; no screw holes in PCB",
+    "Switch plate 20x5, body depth10, lever width4, assumed travel5",
+    "Optical aperture/physical fit/rail friction/head dimensions and retention require hardware test"
+  ],
+  "Coque_monobloc.stl": {
+    "facets": 1484,
+    "solid": true
+  },
+  "Dos_coulissant.stl": {
+    "facets": 2440,
+    "solid": true
+  }
+}
